@@ -30,12 +30,13 @@
         <div class="flex">
           <div class="max-w-xs">
             <label for="wallet" class="block text-sm font-medium text-gray-700"
-              >Тикер {{ ticker }}</label
+              >Тикер</label
             >
             <div class="mt-1 relative rounded-md shadow-md">
               <input
                 v-model="ticker"
                 v-on:keydown.enter="handleAddClick"
+                v-on:keyup="handleKeyDown"
                 type="text"
                 name="wallet"
                 id="wallet"
@@ -44,30 +45,21 @@
               />
             </div>
             <div
+              v-if="currentSuggestions.length"
               class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
             >
               <span
+                v-for="(item, i) in currentSuggestions"
+                :key="i"
                 class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
+                @click="handleAddSuggestion(item)"
               >
-                BTC
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                DOGE
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                BCH
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                CHD
+                {{ item }}
               </span>
             </div>
-            <div class="text-sm text-red-600">Такой тикер уже добавлен</div>
+            <div v-if="isInvalidValue" class="text-sm text-red-600">
+              Такой тикер уже добавлен
+            </div>
           </div>
         </div>
         <button
@@ -187,15 +179,61 @@ export default {
       selected: null,
       ticker: "",
       graph: [],
-      tickers: [
-        { name: "vue", value: 1200, id: 1 },
-        { name: "react", value: 1500, id: 2 },
-        { name: "angular", value: 9000, id: 3 },
-      ],
+      tickers: [],
+      suggestions: {},
+      currentSuggestions: [],
+      isInvalidValue: false,
     };
   },
+  watch: {
+    ticker: function () {
+      if (!this.ticker) {
+        this.currentSuggestions = [];
+      }
+    },
+  },
+
   methods: {
+    handleAddSuggestion(item) {
+      this.isInvalidValue = false;
+      this.ticker = item;
+
+      if (!this.validation(this.ticker)) {
+        this.isInvalidValue = true;
+        return;
+      }
+
+      this.handleAddItem();
+    },
+
+    handleKeyDown(e) {
+      if (e.key !== "Enter" && this.isInvalidValue) {
+        this.isInvalidValue = false;
+      }
+
+      if (e.key !== "Enter" && this.ticker) {
+        this.currentSuggestions = Object.keys(this.suggestions)
+          .filter((key) =>
+            key.toLowerCase().includes(this.ticker.toLowerCase())
+          )
+          .slice(0, 4);
+      }
+    },
     handleAddClick() {
+      if (!this.ticker) {
+        return;
+      }
+
+      if (!this.validation(this.ticker)) {
+        this.isInvalidValue = true;
+        return;
+      }
+
+      this.handleAddItem();
+
+      this.ticker = "";
+    },
+    handleAddItem() {
       const newId = this.tickers.length + 1;
       this.tickers.push({
         name: this.ticker,
@@ -203,7 +241,7 @@ export default {
         id: newId,
       });
 
-      setInterval(
+      setTimeout(
         async (fsym) => {
           const data = await fetch(
             `https://min-api.cryptocompare.com/data/price?fsym=${fsym}&tsyms=USD`
@@ -220,8 +258,11 @@ export default {
         3000,
         this.ticker
       );
-
-      this.ticker = "";
+    },
+    validation(value) {
+      return !this.tickers.find(
+        ({ name }) => name.toLowerCase() === value.toLowerCase()
+      );
     },
     handleDelete(id) {
       if (id === this.selected) {
@@ -252,6 +293,13 @@ export default {
 
       return formattedData;
     },
+  },
+  created: async function () {
+    const data = await fetch(
+      "https://min-api.cryptocompare.com/data/all/coinlist?summary=true"
+    );
+    const result = await data.json();
+    this.suggestions = result.Data;
   },
 };
 </script>
