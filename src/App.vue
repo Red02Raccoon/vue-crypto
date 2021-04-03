@@ -98,15 +98,15 @@
           <div
             v-for="{ id, name, value } in tickers"
             :key="id"
-            @click="handleSelect(id)"
+            @click="handleSelect(name)"
             :class="{
-              'border-4': selected === id,
+              'border-4': selected === name,
             }"
             class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
             <div class="px-4 py-5 sm:p-6 text-center">
               <dt class="text-sm font-medium text-gray-500 truncate">
-                {{ name }}
+                {{ name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
                 {{ value }}
@@ -114,7 +114,7 @@
             </div>
             <div class="w-full border-t border-gray-200"></div>
             <button
-              @click.stop="handleDelete(id)"
+              @click.stop="handleDelete(name)"
               class="flex items-center justify-center font-medium w-full bg-gray-100 px-4 py-4 sm:px-6 text-md text-gray-500 hover:text-gray-600 hover:bg-gray-200 hover:opacity-20 transition-all focus:outline-none"
             >
               <svg
@@ -137,7 +137,7 @@
       <hr class="w-full border-t border-gray-600 my-4" />
       <section v-if="selected" class="relative">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
-          {{ selectedItem?.name }}
+          {{ selected }}
         </h3>
         <div class="flex items-end border-gray-600 border-b border-l h-64">
           <div
@@ -180,6 +180,7 @@
 </template>
 
 <script>
+const tickersKey = "tickers-list";
 export default {
   name: "App",
   data() {
@@ -187,11 +188,7 @@ export default {
       selected: null,
       ticker: "",
       graph: [],
-      tickers: [
-        { name: "vue", value: 1200, id: 1 },
-        { name: "react", value: 1500, id: 2 },
-        { name: "angular", value: 9000, id: 3 },
-      ],
+      tickers: [],
     };
   },
   methods: {
@@ -203,34 +200,38 @@ export default {
         id: newId,
       });
 
-      setInterval(
+      localStorage.setItem(tickersKey, JSON.stringify(this.tickers));
+      this.getInformation(this.ticker);
+
+      this.ticker = "";
+    },
+    getInformation(tickerName) {
+      setTimeout(
         async (fsym) => {
           const data = await fetch(
             `https://min-api.cryptocompare.com/data/price?fsym=${fsym}&tsyms=USD`
           );
           const result = await data.json();
 
-          const item = this.tickers.find(({ id }) => id === newId);
+          const item = this.tickers.find(({ name }) => name === fsym);
           item.value = result.USD;
 
-          if (newId === this.selected) {
+          if (fsym === this.selected) {
             this.graph.push(result.USD);
           }
         },
         3000,
-        this.ticker
+        tickerName
       );
-
-      this.ticker = "";
     },
-    handleDelete(id) {
-      if (id === this.selected) {
+    handleDelete(name) {
+      if (name === this.selected) {
         this.selected = null;
       }
-      this.tickers = this.tickers.filter((item) => item.id !== id);
+      this.tickers = this.tickers.filter((item) => item.name !== name);
     },
-    handleSelect(id) {
-      this.selected = id;
+    handleSelect(name) {
+      this.selected = name;
 
       this.graph = [];
     },
@@ -239,9 +240,6 @@ export default {
     },
   },
   computed: {
-    selectedItem() {
-      return this.tickers.find(({ id }) => id === this.selected);
-    },
     normalizedGraph() {
       const max = Math.max(...this.graph);
       const min = Math.min(...this.graph);
@@ -252,6 +250,10 @@ export default {
 
       return formattedData;
     },
+  },
+  created() {
+    this.tickers = JSON.parse(localStorage.getItem(tickersKey) || "[]");
+    this.tickers.forEach(({ name }) => this.getInformation(name));
   },
 };
 </script>
