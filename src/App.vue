@@ -27,6 +27,29 @@
     </template>
     <div class="container">
       <section>
+        <div>
+          <div>Фильтр: <input class="mx-3" v-model="filter" /></div>
+          <hr class="w-full border-t border-gray-600 my-4" />
+          <div>
+            <button
+              class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              v-if="hasNextPage"
+              @click="page = page + 1"
+            >
+              Вперед
+            </button>
+            <button
+              class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              v-if="page > 1"
+              @click="page = page - 1"
+            >
+              Назад
+            </button>
+            <div>Current Page: {{ page }}</div>
+            <div>Total Length: {{ tickers.length }}</div>
+          </div>
+          <hr class="w-full border-t border-gray-600 my-4" />
+        </div>
         <div class="flex">
           <div class="max-w-xs">
             <label for="wallet" class="block text-sm font-medium text-gray-700"
@@ -92,11 +115,11 @@
         </button>
       </section>
 
-      <template v-if="tickers.length">
+      <template v-if="filteredTickers().length">
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
-            v-for="{ id, name, value } in tickers"
+            v-for="{ id, name, value } in filteredTickers()"
             :key="id"
             @click="handleSelect(name)"
             :class="{
@@ -189,9 +212,24 @@ export default {
       ticker: "",
       graph: [],
       tickers: [],
+      filter: "",
+      page: 1,
+      hasNextPage: false,
     };
   },
   methods: {
+    filteredTickers() {
+      const start = (this.page - 1) * 6;
+      const end = this.page * 6;
+
+      const filteredTickers = this.tickers.filter(({ name }) =>
+        name.includes(this.filter)
+      );
+
+      this.hasNextPage = filteredTickers.length > end;
+
+      return filteredTickers.slice(start, end);
+    },
     handleAddClick() {
       const newId = this.tickers.length + 1;
       this.tickers.push({
@@ -199,6 +237,8 @@ export default {
         value: 0,
         id: newId,
       });
+
+      this.filter = "";
 
       localStorage.setItem(tickersKey, JSON.stringify(this.tickers));
       this.getInformation(this.ticker);
@@ -252,8 +292,38 @@ export default {
     },
   },
   created() {
+    const windowData = Object.fromEntries(
+      new URL(window.location).searchParams.entries()
+    );
+
+    if (windowData.filter) {
+      this.filter = windowData.filter;
+    }
+
+    if (windowData.page) {
+      this.page = windowData.page;
+    }
+
     this.tickers = JSON.parse(localStorage.getItem(tickersKey) || "[]");
     this.tickers.forEach(({ name }) => this.getInformation(name));
+  },
+  watch: {
+    filter() {
+      this.page = 1;
+
+      window.history.pushState(
+        null,
+        document.title,
+        `${window.location.origin}/?filter=${this.filter}&page=${this.page}`
+      );
+    },
+    page() {
+      window.history.pushState(
+        null,
+        document.title,
+        `${window.location.origin}/?filter=${this.filter}&page=${this.page}`
+      );
+    },
   },
 };
 </script>
