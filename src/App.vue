@@ -263,19 +263,17 @@ export default {
       );
 
       this.tickers.forEach((t) => {
-        const price = result[t.name.toUpperCase()];
+        const price = Number(result[t.name.toUpperCase()]);
 
-        if (!price) {
-          t.price = "-";
-        }
-
-        const normilizedPrice = 1 / price;
-
-        t.price = normilizedPrice;
+        t.price = price || "-";
       });
     },
 
     formatPrice(price) {
+      if (typeof price !== "number") {
+        return price;
+      }
+
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     },
   },
