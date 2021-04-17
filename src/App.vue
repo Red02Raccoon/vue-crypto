@@ -284,12 +284,18 @@ export default {
     },
 
     updateTicker(tickerName, price) {
-      console.log("update", tickerName, price);
       this.tickers
         .filter((t) => t.name === tickerName)
-        .forEach((t) => (t.price = price));
+        .forEach((t) => {
+          if (t.name === this.selectedTicker) {
+            this.graph.push(price);
+          }
+
+          t.price = price;
+        });
     },
   },
+
   computed: {
     normalizedGraph() {
       const max = Math.max(...this.graph);
