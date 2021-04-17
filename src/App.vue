@@ -203,10 +203,9 @@
 </template>
 
 <script>
-import { loadTickers } from "./app.js";
+import { subscribeToTicker, unsubscribeFromTicker } from "./app.js";
 const tickersKey = "tickers-list";
 const pageSize = 3;
-const requestTime = 10000;
 
 export default {
   name: "App",
@@ -220,18 +219,40 @@ export default {
       page: 1,
     };
   },
+  created() {
+    const windowData = Object.fromEntries(
+      new URL(window.location).searchParams.entries()
+    );
+
+    if (windowData.filter) {
+      this.filter = windowData.filter;
+    }
+
+    if (windowData.page) {
+      this.page = windowData.page;
+    }
+
+    this.tickers = JSON.parse(localStorage.getItem(tickersKey) || "[]");
+
+    this.tickers.forEach((ticker) =>
+      subscribeToTicker(ticker.name, (price) => {
+        this.updateTicker(ticker.name, price);
+      })
+    );
+  },
   methods: {
     addTicker() {
-      const newId = this.tickers.length + 1;
+      const newTicker = {
+        name: this.ticker,
+        price: 0,
+        id: this.tickers.length + 1,
+      };
 
-      this.tickers = [
-        ...this.tickers,
-        {
-          name: this.ticker,
-          price: 0,
-          id: newId,
-        },
-      ];
+      this.tickers = [...this.tickers, newTicker];
+
+      subscribeToTicker(newTicker.name, (price) => {
+        this.updateTicker(newTicker.name, price);
+      });
 
       this.filter = "";
       this.ticker = "";
@@ -243,6 +264,7 @@ export default {
       }
 
       this.tickers = this.tickers.filter((item) => item.name !== name);
+      unsubscribeFromTicker(name);
     },
 
     deleteSelectedTicker() {
@@ -253,28 +275,19 @@ export default {
       this.selectedTicker = name;
     },
 
-    async updateTickers() {
-      if (!this.tickers.length) {
-        return;
-      }
-
-      const result = await loadTickers(
-        this.tickers.map((item) => item.name).join(",")
-      );
-
-      this.tickers.forEach((t) => {
-        const price = Number(result[t.name.toUpperCase()]);
-
-        t.price = price || "-";
-      });
-    },
-
     formatPrice(price) {
       if (typeof price !== "number") {
         return price;
       }
 
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
+    },
+
+    updateTicker(tickerName, price) {
+      console.log("update", tickerName, price);
+      this.tickers
+        .filter((t) => t.name === tickerName)
+        .forEach((t) => (t.price = price));
     },
   },
   computed: {
@@ -320,24 +333,7 @@ export default {
       };
     },
   },
-  created() {
-    const windowData = Object.fromEntries(
-      new URL(window.location).searchParams.entries()
-    );
 
-    if (windowData.filter) {
-      this.filter = windowData.filter;
-    }
-
-    if (windowData.page) {
-      this.page = windowData.page;
-    }
-
-    this.tickers = JSON.parse(localStorage.getItem(tickersKey) || "[]");
-
-    //TODO:
-    setInterval(this.updateTickers, requestTime);
-  },
   watch: {
     tickers() {
       localStorage.setItem(tickersKey, JSON.stringify(this.tickers));
