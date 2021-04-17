@@ -132,7 +132,7 @@
                 {{ name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ price }}
+                {{ formatPrice(price) }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
@@ -270,13 +270,13 @@ export default {
         }
 
         const normilizedPrice = 1 / price;
-        const formattedPrice =
-          normilizedPrice > 1
-            ? normilizedPrice.toFixed(2)
-            : normilizedPrice.toPrecision(2);
 
-        t.price = formattedPrice;
+        t.price = normilizedPrice;
       });
+    },
+
+    formatPrice(price) {
+      return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     },
   },
   computed: {
