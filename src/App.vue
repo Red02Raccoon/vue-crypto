@@ -335,7 +335,8 @@ export default {
 
     this.tickers = JSON.parse(localStorage.getItem(tickersKey) || "[]");
 
-    // setInterval(this.updateTickers, requestTime);
+    //TODO:
+    setInterval(this.updateTickers, requestTime);
   },
   watch: {
     tickers() {
