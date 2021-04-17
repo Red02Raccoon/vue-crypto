@@ -119,7 +119,7 @@
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
-            v-for="{ id, name, value } in paginatedTickers"
+            v-for="{ id, name, price } in paginatedTickers"
             :key="id"
             @click="selectTicker(name)"
             :class="{
@@ -132,7 +132,7 @@
                 {{ name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ value }}
+                {{ price }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
@@ -203,9 +203,10 @@
 </template>
 
 <script>
+import { loadTickers } from "./app.js";
 const tickersKey = "tickers-list";
 const pageSize = 3;
-const requestTime = 5000;
+const requestTime = 10000;
 
 export default {
   name: "App",
@@ -227,12 +228,10 @@ export default {
         ...this.tickers,
         {
           name: this.ticker,
-          value: 0,
+          price: 0,
           id: newId,
         },
       ];
-
-      this.getInformation(this.ticker);
 
       this.filter = "";
       this.ticker = "";
@@ -254,24 +253,30 @@ export default {
       this.selectedTicker = name;
     },
 
-    getInformation(tickerName) {
-      setTimeout(
-        async (fsym) => {
-          const data = await fetch(
-            `https://min-api.cryptocompare.com/data/price?fsym=${fsym}&tsyms=USD`
-          );
-          const result = await data.json();
+    async updateTickers() {
+      if (!this.tickers.length) {
+        return;
+      }
 
-          const item = this.tickers.find(({ name }) => name === fsym);
-          item.value = result.USD;
-
-          if (fsym === this.selectedTicker) {
-            this.graph.push(result.USD);
-          }
-        },
-        requestTime,
-        tickerName
+      const result = await loadTickers(
+        this.tickers.map((item) => item.name).join(",")
       );
+
+      this.tickers.forEach((t) => {
+        const price = result[t.name.toUpperCase()];
+
+        if (!price) {
+          t.price = "-";
+        }
+
+        const normilizedPrice = 1 / price;
+        const formattedPrice =
+          normilizedPrice > 1
+            ? normilizedPrice.toFixed(2)
+            : normilizedPrice.toPrecision(2);
+
+        t.price = formattedPrice;
+      });
     },
   },
   computed: {
@@ -331,7 +336,8 @@ export default {
     }
 
     this.tickers = JSON.parse(localStorage.getItem(tickersKey) || "[]");
-    this.tickers.forEach(({ name }) => this.getInformation(name));
+
+    // setInterval(this.updateTickers, requestTime);
   },
   watch: {
     tickers() {
