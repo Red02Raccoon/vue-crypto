@@ -379,7 +379,8 @@ export default {
     selectedTicker() {
       this.graph = [];
 
-      setTimeout(this.calculateMaxGraphElements, 100);
+      //   setTimeout(this.calculateMaxGraphElements, 100);
+      this.$nextTick().then(this.calculateMaxGraphElements);
     },
 
     paginatedTickers() {
