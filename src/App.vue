@@ -59,6 +59,7 @@
               <input
                 v-model="ticker"
                 v-on:keydown.enter="addTicker"
+                v-on:keyup="handleKeyUp"
                 type="text"
                 name="wallet"
                 id="wallet"
@@ -91,7 +92,7 @@
                 CHD
               </span>
             </div>
-            <div v-if="false" class="text-sm text-red-600">
+            <div v-if="error" class="text-sm text-red-600">
               Такой тикер уже добавлен
             </div>
           </div>
@@ -229,6 +230,7 @@ export default {
       page: 1,
       maxGraphElements: 1,
       graphColunmWidth: 38,
+      error: false,
     };
   },
 
@@ -264,6 +266,14 @@ export default {
 
   methods: {
     addTicker() {
+      if (!this.ticker) {
+        return;
+      }
+
+      if (!this.isValidTicker(this.ticker)) {
+        return;
+      }
+
       const newTicker = {
         name: this.ticker,
         price: 0,
@@ -278,6 +288,12 @@ export default {
 
       this.filter = "";
       this.ticker = "";
+    },
+
+    handleKeyUp(e) {
+      if (e.key !== "Enter" && this.error) {
+        this.error = false;
+      }
     },
 
     deleteTicker(name) {
@@ -303,6 +319,16 @@ export default {
       }
 
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
+    },
+
+    isValidTicker(ticker) {
+      const hasTicker = this.tickers.find(
+        ({ name }) => name.toLowerCase() === ticker.toLowerCase()
+      );
+
+      this.error = hasTicker;
+
+      return !hasTicker;
     },
 
     updateTicker(tickerName, price) {
