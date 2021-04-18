@@ -67,6 +67,7 @@
               />
             </div>
             <div
+              v-if="false"
               class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
             >
               <span
@@ -90,7 +91,9 @@
                 CHD
               </span>
             </div>
-            <div class="text-sm text-red-600">Такой тикер уже добавлен</div>
+            <div v-if="false" class="text-sm text-red-600">
+              Такой тикер уже добавлен
+            </div>
           </div>
         </div>
         <button
@@ -209,6 +212,10 @@
 import { subscribeToTicker, unsubscribeFromTicker } from "./app.js";
 const tickersKey = "tickers-list";
 const pageSize = 3;
+
+//TODO:
+// - add ticker validation
+// - add tickers suggestions
 
 export default {
   name: "App",
