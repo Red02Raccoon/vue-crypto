@@ -162,11 +162,14 @@
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
           {{ selectedTicker }}
         </h3>
-        <div class="flex items-end border-gray-600 border-b border-l h-64">
+        <div
+          class="flex items-end border-gray-600 border-b border-l h-64"
+          ref="graph"
+        >
           <div
             v-for="(g, i) in normalizedGraph"
             :key="i"
-            :style="{ height: `${g}%` }"
+            :style="{ height: `${g}%`, width: `${graphColunmWidth}px` }"
             class="bg-purple-800 border w-10"
           ></div>
         </div>
@@ -217,8 +220,11 @@ export default {
       tickers: [],
       filter: "",
       page: 1,
+      maxGraphElements: 1,
+      graphColunmWidth: 38,
     };
   },
+
   created() {
     const windowData = Object.fromEntries(
       new URL(window.location).searchParams.entries()
@@ -240,6 +246,15 @@ export default {
       })
     );
   },
+
+  mounted() {
+    window.addEventListener("resize", this.calculateMaxGraphElements);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener("resize", this.calculateMaxGraphElements);
+  },
+
   methods: {
     addTicker() {
       const newTicker = {
@@ -289,10 +304,26 @@ export default {
         .forEach((t) => {
           if (t.name === this.selectedTicker) {
             this.graph.push(price);
+
+            if (this.graph.length > this.maxGraphElements) {
+              this.graph = this.graph.slice(-this.maxGraphElements);
+            }
           }
 
           t.price = price;
         });
+    },
+
+    calculateMaxGraphElements() {
+      const { graph: graphRef } = this.$refs;
+
+      if (!graphRef) {
+        return;
+      }
+
+      this.maxGraphElements = Math.floor(
+        graphRef.clientWidth / this.graphColunmWidth
+      );
     },
   },
 
@@ -347,6 +378,8 @@ export default {
 
     selectedTicker() {
       this.graph = [];
+
+      setTimeout(this.calculateMaxGraphElements, 100);
     },
 
     paginatedTickers() {
