@@ -1,5 +1,6 @@
 import { API_KEY } from "./constants.js";
 
+//socket
 const AGGREGATE_INDEX = "5";
 const tickersHandlers = new Map();
 
@@ -63,3 +64,10 @@ export const unsubscribeFromTicker = (ticker) => {
   tickersHandlers.delete(ticker);
   unsubscribeFromTickerOnWs(ticker);
 };
+
+//REST api
+export const getAllCoins = async () =>
+  fetch("https://min-api.cryptocompare.com/data/all/coinlist")
+    .then((res) => res.json())
+    .then((res) => Object.keys(res.Data))
+    .catch((e) => console.error(e));
