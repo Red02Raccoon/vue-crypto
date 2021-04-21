@@ -32,30 +32,6 @@
             <div><b>Фильтр:</b> <input class="mx-3" v-model="filter" /></div>
             <hr class="w-full border-t border-gray-600 my-4" />
           </div>
-
-          <div class="pagination">
-            <button
-              class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              v-if="hasNextPage"
-              @click="page = page + 1"
-            >
-              Вперед
-            </button>
-            <button
-              class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              v-if="page > 1"
-              @click="page = page - 1"
-            >
-              Назад
-            </button>
-            <div>
-              Current Page : <b>{{ page }}</b>
-            </div>
-            <div>
-              Tickers Count : <b>{{ tickers.length }}</b>
-            </div>
-            <hr class="w-full border-t border-gray-600 my-4" />
-          </div>
         </div>
 
         <div class="add-ticker">
@@ -78,31 +54,21 @@
                   placeholder="Например DOGE"
                 />
               </div>
+
               <div
-                v-if="false"
-                class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
+                v-if="currentSuggestions.length"
+                class="suggestions flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
               >
                 <span
                   class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
+                  v-for="item in currentSuggestions"
+                  :key="item"
+                  v-on:click="handleAddSuggestion(item)"
                 >
-                  BTC
-                </span>
-                <span
-                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-                >
-                  DOGE
-                </span>
-                <span
-                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-                >
-                  BCH
-                </span>
-                <span
-                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-                >
-                  CHD
+                  {{ item }}
                 </span>
               </div>
+
               <div v-if="error" class="text-sm text-red-600">
                 Такой тикер уже добавлен
               </div>
@@ -132,6 +98,7 @@
             Добавить
           </button>
         </div>
+        <div>You added: {{ tickers.length }} ticker(s)</div>
       </section>
 
       <div class="tickers" v-if="paginatedTickers.length">
@@ -175,6 +142,37 @@
             </button>
           </div>
         </dl>
+      </div>
+
+      <div class="pagination" v-if="paginatedTickers.length">
+        <hr class="w-full border-t border-gray-600 my-4" />
+        <div class="flex items-center justify-center">
+          <div class="flex items-center">
+            <button
+              class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              :class="{
+                'opacity-50 cursor-not-allowed': !hasPrevPage,
+              }"
+              @click="page = page - 1"
+              :disabled="!hasPrevPage"
+            >
+              Назад
+            </button>
+            <div class="mx-4">
+              <b>{{ page }}</b>
+            </div>
+            <button
+              class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              :class="{
+                'opacity-50 cursor-not-allowed': !hasNextPage,
+              }"
+              :disabled="!hasNextPage"
+              @click="page = page + 1"
+            >
+              Вперед
+            </button>
+          </div>
+        </div>
       </div>
 
       <hr class="w-full border-t border-gray-600 my-4" />
@@ -233,11 +231,7 @@ import {
   getAllCoins,
 } from "./app.js";
 const tickersKey = "tickers-list";
-const pageSize = 3;
-
-//TODO:
-// - add ticker validation
-// - add tickers suggestions
+const pageSize = 6;
 
 export default {
   name: "App",
@@ -253,6 +247,7 @@ export default {
       graphColunmWidth: 38,
       error: false,
       suggestions: [],
+      currentSuggestions: [],
       isAddDisabled: true,
     };
   },
@@ -267,7 +262,7 @@ export default {
     }
 
     if (windowData.page) {
-      this.page = windowData.page;
+      this.page = +windowData.page;
     }
 
     this.tickers = JSON.parse(localStorage.getItem(tickersKey) || "[]");
@@ -313,14 +308,13 @@ export default {
 
       this.filter = "";
       this.ticker = "";
+      this.currentSuggestions = [];
     },
 
     handleKeyUp(e) {
       if (e.key !== "Enter" && this.error) {
         this.error = false;
       }
-
-      this.isAddDisabled = !this.ticker.trim();
     },
 
     deleteTicker(name) {
@@ -330,6 +324,8 @@ export default {
 
       this.tickers = this.tickers.filter((item) => item.name !== name);
       unsubscribeFromTicker(name);
+
+      this.error = false;
     },
 
     deleteSelectedTicker() {
@@ -386,6 +382,12 @@ export default {
         graphRef.clientWidth / this.graphColunmWidth
       );
     },
+
+    handleAddSuggestion(item) {
+      this.ticker = item;
+
+      this.addTicker();
+    },
   },
 
   computed: {
@@ -420,6 +422,10 @@ export default {
       return this.filteredTickers.length > this.endIndex;
     },
 
+    hasPrevPage() {
+      return this.page !== 1;
+    },
+
     paginatedTickers() {
       return this.filteredTickers.slice(this.startIndex, this.endIndex);
     },
@@ -433,6 +439,18 @@ export default {
   },
 
   watch: {
+    ticker() {
+      const currentTicker = this.ticker.trim();
+      this.isAddDisabled = !currentTicker;
+
+      if (currentTicker) {
+        this.currentSuggestions = this.suggestions
+          .filter((item) => item.includes(currentTicker))
+          .slice(-4)
+          .sort();
+      }
+    },
+
     tickers() {
       localStorage.setItem(tickersKey, JSON.stringify(this.tickers));
     },
