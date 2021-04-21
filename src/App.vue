@@ -27,10 +27,13 @@
     </template>
     <div class="container">
       <section>
-        <div>
-          <div>Фильтр: <input class="mx-3" v-model="filter" /></div>
-          <hr class="w-full border-t border-gray-600 my-4" />
-          <div>
+        <div class="settings">
+          <div class="filter">
+            <div><b>Фильтр:</b> <input class="mx-3" v-model="filter" /></div>
+            <hr class="w-full border-t border-gray-600 my-4" />
+          </div>
+
+          <div class="pagination">
             <button
               class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               v-if="hasNextPage"
@@ -45,81 +48,93 @@
             >
               Назад
             </button>
-            <div>Current Page: {{ page }}</div>
-            <div>Total Length: {{ tickers.length }}</div>
-          </div>
-          <hr class="w-full border-t border-gray-600 my-4" />
-        </div>
-        <div class="flex">
-          <div class="max-w-xs">
-            <label for="wallet" class="block text-sm font-medium text-gray-700"
-              >Тикер {{ ticker }}</label
-            >
-            <div class="mt-1 relative rounded-md shadow-md">
-              <input
-                v-model="ticker"
-                v-on:keydown.enter="addTicker"
-                v-on:keyup="handleKeyUp"
-                type="text"
-                name="wallet"
-                id="wallet"
-                class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
-                placeholder="Например DOGE"
-              />
+            <div>
+              Current Page : <b>{{ page }}</b>
             </div>
-            <div
-              v-if="false"
-              class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
-            >
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                BTC
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                DOGE
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                BCH
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                CHD
-              </span>
+            <div>
+              Tickers Count : <b>{{ tickers.length }}</b>
             </div>
-            <div v-if="error" class="text-sm text-red-600">
-              Такой тикер уже добавлен
-            </div>
+            <hr class="w-full border-t border-gray-600 my-4" />
           </div>
         </div>
-        <button
-          v-on:click="addTicker"
-          type="button"
-          class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-        >
-          <!-- Heroicon name: solid/mail -->
-          <svg
-            class="-ml-0.5 mr-2 h-6 w-6"
-            xmlns="http://www.w3.org/2000/svg"
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-            fill="#ffffff"
+
+        <div class="add-ticker">
+          <div class="flex">
+            <div class="max-w-xs">
+              <label
+                for="wallet"
+                class="block text-sm font-medium text-gray-700 font-semibold"
+                >Тикер {{ ticker }}</label
+              >
+              <div class="mt-1 relative rounded-md shadow-md">
+                <input
+                  v-model="ticker"
+                  v-on:keydown.enter="addTicker"
+                  v-on:keyup="handleKeyUp"
+                  type="text"
+                  name="wallet"
+                  id="wallet"
+                  class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
+                  placeholder="Например DOGE"
+                />
+              </div>
+              <div
+                v-if="false"
+                class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap"
+              >
+                <span
+                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
+                >
+                  BTC
+                </span>
+                <span
+                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
+                >
+                  DOGE
+                </span>
+                <span
+                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
+                >
+                  BCH
+                </span>
+                <span
+                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
+                >
+                  CHD
+                </span>
+              </div>
+              <div v-if="error" class="text-sm text-red-600">
+                Такой тикер уже добавлен
+              </div>
+            </div>
+          </div>
+          <button
+            v-on:click="addTicker"
+            type="button"
+            class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            :class="{
+              'opacity-50 cursor-not-allowed': isAddDisabled,
+            }"
           >
-            <path
-              d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
-            ></path>
-          </svg>
-          Добавить
-        </button>
+            <!-- Heroicon name: solid/mail -->
+            <svg
+              class="-ml-0.5 mr-2 h-6 w-6"
+              xmlns="http://www.w3.org/2000/svg"
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="#ffffff"
+            >
+              <path
+                d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
+              ></path>
+            </svg>
+            Добавить
+          </button>
+        </div>
       </section>
 
-      <template v-if="paginatedTickers.length">
+      <div class="tickers" v-if="paginatedTickers.length">
         <hr class="w-full border-t border-gray-600 my-4" />
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
@@ -160,9 +175,11 @@
             </button>
           </div>
         </dl>
-      </template>
+      </div>
+
       <hr class="w-full border-t border-gray-600 my-4" />
-      <section v-if="selectedTicker" class="relative">
+
+      <section class="relative selected-ticker" v-if="selectedTicker">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
           {{ selectedTicker }}
         </h3>
@@ -210,7 +227,11 @@
 </template>
 
 <script>
-import { subscribeToTicker, unsubscribeFromTicker } from "./app.js";
+import {
+  subscribeToTicker,
+  unsubscribeFromTicker,
+  getAllCoins,
+} from "./app.js";
 const tickersKey = "tickers-list";
 const pageSize = 3;
 
@@ -231,10 +252,12 @@ export default {
       maxGraphElements: 1,
       graphColunmWidth: 38,
       error: false,
+      suggestions: [],
+      isAddDisabled: true,
     };
   },
 
-  created() {
+  async created() {
     const windowData = Object.fromEntries(
       new URL(window.location).searchParams.entries()
     );
@@ -254,6 +277,8 @@ export default {
         this.updateTicker(ticker.name, price);
       })
     );
+
+    this.suggestions = await getAllCoins();
   },
 
   mounted() {
@@ -294,6 +319,8 @@ export default {
       if (e.key !== "Enter" && this.error) {
         this.error = false;
       }
+
+      this.isAddDisabled = !this.ticker.trim();
     },
 
     deleteTicker(name) {
@@ -322,8 +349,9 @@ export default {
     },
 
     isValidTicker(ticker) {
+      const value = ticker.trim();
       const hasTicker = this.tickers.find(
-        ({ name }) => name.toLowerCase() === ticker.toLowerCase()
+        ({ name }) => name.toLowerCase() === value.toLowerCase()
       );
 
       this.error = hasTicker;
