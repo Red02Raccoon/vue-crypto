@@ -5,11 +5,10 @@
     <div class="container">
       <section>
         <div class="settings">
-          <div class="filter">
-            <div><b>Filter:</b> <input class="mx-3" v-model="filter" /></div>
-          </div>
-          <hr class="w-full border-t border-gray-600 my-4" />
+          <filter-component :value="filter" @input-change="filter = $event" />
         </div>
+
+        <divider-component class="my-4" />
 
         <div class="add-ticker">
           <div class="max-w-xs">
@@ -60,9 +59,10 @@
         <total-tickers-count :count="tickers.length" />
       </section>
 
+      <divider-component class="my-4" />
+
       <div class="tickers" v-if="paginatedTickers.length">
-        <hr class="w-full border-t border-gray-600 my-4" />
-        <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <dl class="grid grid-cols-1 gap-5 sm:grid-cols-3 mt-5">
           <div
             v-for="{ id, name, price } in paginatedTickers"
             :key="id"
@@ -76,7 +76,7 @@
               <dt class="text-sm font-medium text-gray-500 truncate">
                 {{ name }} - USD
               </dt>
-              <dd class="mt-1 text-3xl font-semibold text-gray-900">
+              <dd class="text-3xl font-semibold text-gray-900 mt-1">
                 {{ formatPrice(price) }}
               </dd>
             </div>
@@ -92,8 +92,9 @@
         </dl>
       </div>
 
+      <divider-component class="my-4" />
+
       <div class="pagination" v-if="paginatedTickers.length">
-        <hr class="w-full border-t border-gray-600 my-4" />
         <div class="flex items-center justify-center">
           <div class="flex items-center">
             <navigation-button
@@ -118,7 +119,7 @@
         </div>
       </div>
 
-      <hr class="w-full border-t border-gray-600 my-4" />
+      <divider-component class="my-4" />
 
       <section class="relative selected-ticker" v-if="selectedTicker">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
@@ -160,6 +161,8 @@ import Loader from "./components/Loader.vue";
 import TotalTickersCount from "./components/TotalTickersCount.vue";
 import AddTickerButton from "./components/AddTickerButton.vue";
 import NavigationButton from "./components/NavigationButton.vue";
+import FilterComponent from "./components/FilterComponent.vue";
+import DividerComponent from "./components/Divider.vue";
 
 const tickersKey = "tickers-list";
 const pageSize = 6;
@@ -174,6 +177,8 @@ export default {
     TotalTickersCount,
     AddTickerButton,
     NavigationButton,
+    FilterComponent,
+    DividerComponent,
   },
 
   data() {
