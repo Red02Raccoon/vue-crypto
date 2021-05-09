@@ -146,6 +146,8 @@
       </section>
     </div>
   </div>
+
+  <form-app> </form-app>
 </template>
 
 <script>
@@ -163,6 +165,7 @@ import AddTickerButton from "./components/AddTickerButton.vue";
 import NavigationButton from "./components/NavigationButton.vue";
 import FilterComponent from "./components/FilterComponent.vue";
 import DividerComponent from "./components/Divider.vue";
+import App2 from "./app-2/Main.vue";
 
 const tickersKey = "tickers-list";
 const pageSize = 6;
@@ -179,6 +182,7 @@ export default {
     NavigationButton,
     FilterComponent,
     DividerComponent,
+    "form-app": App2,
   },
 
   data() {
