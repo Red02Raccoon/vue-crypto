@@ -90,9 +90,8 @@
             </button>
           </div>
         </dl>
+        <divider-component class="my-4" />
       </div>
-
-      <divider-component class="my-4" />
 
       <div class="pagination" v-if="paginatedTickers.length">
         <div class="flex items-center justify-center">
@@ -117,9 +116,8 @@
             >
           </div>
         </div>
+        <divider-component class="my-4" />
       </div>
-
-      <divider-component class="my-4" />
 
       <section class="relative selected-ticker" v-if="selectedTicker">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
@@ -147,7 +145,7 @@
     </div>
   </div>
 
-  <form-app> </form-app>
+  <form-app v-if="false" />
 </template>
 
 <script>
