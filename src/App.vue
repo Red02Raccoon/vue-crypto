@@ -145,7 +145,7 @@
     </div>
   </div>
 
-  <form-app v-if="false" />
+  <form-app v-if="true" />
 </template>
 
 <script>

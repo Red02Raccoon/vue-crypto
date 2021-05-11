@@ -9,31 +9,19 @@
     </div>
 
     <div class="form mt-5">
-      <div class="mb-2" v-for="item in formFields" :key="item.field">
-        <div class="flex">
-          <label
-            class="block text-sm font-medium text-gray-700"
-            :class="{
-              'text-red-700': !item.isValid && item.isValid === 'boolean',
-            }"
-            :for="item.field"
-            >{{ item.label }}</label
-          >
-          <span
-            class="text-red-500 text-sm ml-5"
-            v-show="!item.isValid && typeof item.isValid === 'boolean'"
-            >{{ item.errorMessage }}</span
-          >
-        </div>
-        <input
-          type="text"
-          class="focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md mt-1"
-          :name="item.field"
-          :id="item.field"
-          :value="item.value"
-          @input="handleInputChange($event, item)"
-        />
-      </div>
+      <input-item
+        class="mb-2"
+        v-for="item in formFields"
+        :key="item.field"
+        :hasError="!item.isValid && typeof item.isValid === 'boolean'"
+        :field="item.field"
+        :label="item.label"
+        :errorMessage="item.errorMessage"
+        :value="item.value"
+        @input="handleInputChange(item, $event)"
+      />
+
+      <pre>{{ formFields }}</pre>
 
       <button
         type="button"
@@ -48,8 +36,9 @@
 </template>
 <script>
 import ProgressBar from "./components/ProgressBar.vue";
+import InputItem from "./components/Input.vue";
 export default {
-  components: { ProgressBar },
+  components: { ProgressBar, InputItem },
   data() {
     return {
       formFields: [
@@ -101,7 +90,7 @@ export default {
   },
 
   methods: {
-    handleInputChange(e, item) {
+    handleInputChange(item, { e }) {
       item.value = e.target.value;
 
       item.validation?.();
